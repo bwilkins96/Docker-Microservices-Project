@@ -2,6 +2,7 @@
 const express = require('express');
 const csrf = require('csurf');
 const { check, validationResult } = require('express-validator');
+const fetch = require('node-fetch');
 
 const db = require('./db/models');
 
@@ -13,6 +14,22 @@ const asyncHandler = (handler) => (req, res, next) => handler(req, res, next).ca
 
 router.get('/', asyncHandler(async (req, res) => {
   const books = await db.Book.findAll({ order: [['title', 'ASC']] });
+
+  for (let b in books) {
+    console.log(books[b].id);
+
+    try {
+    info = await fetch(`http://host.docker.internal:5000/ratings/${books[b].id}`);
+    parsed = await info.json();
+
+    if (parsed.average) {
+      books[b].review = parsed.average;
+    } else {
+      books[b].review = 'none yet!';
+    }
+  } catch {}
+  }
+
   res.render('book-list', { title: 'Books', books });
 }));
 
@@ -151,5 +168,33 @@ router.post('/book/delete/:id(\\d+)', csrfProtection, asyncHandler(async (req, r
   await book.destroy();
   res.redirect('/');
 }));
+
+
+router.get('/book/review/:id(\\d+)', csrfProtection,
+  asyncHandler(async (req, res) => {
+    const bookId = parseInt(req.params.id, 10);
+    const book = await db.Book.findByPk(bookId);
+    res.render('review-book', {
+      title: 'Review Book',
+      book,
+      csrfToken: req.csrfToken(),
+    });
+  }));
+
+  router.post('/book/review/:id(\\d+)',
+  asyncHandler(async (req, res) => {
+    const bookId = parseInt(req.params.id, 10);
+
+    const {
+      review,
+      email
+    } = req.body;
+
+    await fetch(`http://host.docker.internal:5000/ratings/${bookId}?value=${review}&email=${email}`, {
+      method: 'POST'
+    });
+
+    res.redirect('/');
+  }));
 
 module.exports = router;

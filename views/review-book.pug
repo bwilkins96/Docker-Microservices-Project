@@ -1,0 +1,12 @@
+extends layout.pug
+
+include utils.pug
+
+block content
+  +validationErrorSummary(errors)
+  form(action=`/book/review/${book.id}` method='post')
+    +textField('Review', 'review', review)
+    +textField('Email', 'email', email)
+    div(class='py-4')
+      button(type='submit' class='btn btn-primary') Submit Review
+      a(href=`/` class='btn btn-warning ml-2') Cancel

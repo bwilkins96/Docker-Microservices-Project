@@ -11,6 +11,7 @@ block content
         th(scope='col') Release Date
         th(scope='col') Page Count
         th(scope='col') Publisher
+        th(scope='col') Review Score*
         th(scope='col')
     tbody
       each book in books
@@ -21,6 +22,8 @@ block content
           td= book.releaseDate
           td= book.pageCount
           td= book.publisher
+          td= book.review
           td
             a(class='btn btn-primary' href=`/book/edit/${book.id}` role='button') Edit
             a(class='btn btn-danger ml-2' href=`/book/delete/${book.id}` role='button') Delete
+            a(class='btn btn-success' href=`/book/review/${book.id}` role='button' style='margin-top:10px') Review
